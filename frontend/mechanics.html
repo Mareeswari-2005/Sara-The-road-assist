@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>SARA • Mechanics</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/" class="brand">SARA</a>
+    <div class="search-wrap">
+      <input id="q" placeholder="Search by name, street, city, or service">
+      <button id="shareLoc" title="Share location">Share</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card panel">
+      <div class="controls">
+        <label>Service:
+          <select id="service">
+            <option value="">Any</option>
+            <option value="flat_tire">Flat tire</option>
+            <option value="battery">Battery</option>
+            <option value="fuel">Fuel</option>
+            <option value="towing">Towing</option>
+            <option value="engine">Engine</option>
+          </select>
+        </label>
+
+        <label>Only open <input id="onlyOpen" type="checkbox"></label>
+        <label>Sort:
+          <select id="sort"><option value="auto">Auto</option><option value="distance">Distance</option><option value="rating">Rating</option></select>
+        </label>
+      </div>
+
+      <div id="list" class="list"></div>
+    </section>
+  </main>
+
+  <template id="itemT">
+    <div class="item">
+      <div class="meta-col">
+        <div class="title"></div>
+        <div class="small meta"></div>
+        <div class="tags"></div>
+      </div>
+      <div class="actions-col">
+        <a class="btn" target="_blank">Directions</a>
+        <a class="btn wa" target="_blank">WhatsApp</a>
+        <a class="btn primary call">Call</a>
+      </div>
+    </div>
+  </template>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Fetch and render list with liberal search
+    const listEl = document.getElementById('list');
+    const qInput = document.getElementById('q');
+    const serviceEl = document.getElementById('service');
+    const sortEl = document.getElementById('sort');
+    const onlyOpenEl = document.getElementById('onlyOpen');
+    const tpl = document.getElementById('itemT');
+
+    let myLoc = null;
+    function buildQuery(){
+      const params = new URLSearchParams();
+      if(qInput.value.trim()) params.set('q', qInput.value.trim());
+      if(serviceEl.value) params.set('service', serviceEl.value);
+      if(sortEl.value && sortEl.value!=='auto') params.set('sort', sortEl.value);
+      if(myLoc){ params.set('lat', myLoc.lat); params.set('lng', myLoc.lng); }
+      return params.toString() ? '/api/mechanics?'+params.toString() : '/api/mechanics';
+    }
+
+    async function fetchList(){
+      listEl.innerHTML = '<div class="muted small">Loading…</div>';
+      const url = buildQuery();
+      const res = await fetch(url);
+      const data = await res.json();
+      // apply onlyOpen client-side because API doesn't filter open flag currently except service/city/q
+      let rows = data;
+      if(onlyOpenEl.checked) rows = rows.filter(r=> r.open);
+      if(!rows.length){ listEl.innerHTML = '<div class="muted">No results</div>'; return; }
+      listEl.innerHTML = '';
+      rows.forEach(r=>{
+        const el = tpl.content.cloneNode(true);
+        el.querySelector('.title').textContent = r.name + (r.rating ? ' • ★'+(r.rating.toFixed(1)) : '');
+        el.querySelector('.meta').textContent = (r.address ? r.address + ' • ' : '') + (r.city || '');
+        const tags = el.querySelector('.tags');
+        (r.services||[]).forEach(s => { const sp = document.createElement('span'); sp.className='tag'; sp.textContent = s.replace('_',' '); tags.appendChild(sp); });
+        const dir = myLoc ? `https://www.google.com/maps/dir/?api=1&origin=${myLoc.lat},${myLoc.lng}&destination=${r.lat},${r.lng}` : `https://www.google.com/maps?q=${r.lat},${r.lng}`;
+        el.querySelector('.actions-col a').href = dir;
+        el.querySelector('.actions-col .wa').href = `https://wa.me/${(r.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+r.name+' I need help')}`;
+        el.querySelector('.actions-col .call').href = `tel:${(r.phone||'').replace(/\s+/g,'')}`;
+        listEl.appendChild(el);
+      });
+    }
+
+    qInput.addEventListener('input', ()=> fetchList());
+    serviceEl.addEventListener('change', ()=> fetchList());
+    sortEl.addEventListener('change', ()=> fetchList());
+    onlyOpenEl.addEventListener('change', ()=> fetchList());
+
+    document.getElementById('shareLoc').addEventListener('click', ()=>{
+      if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
+      navigator.geolocation.getCurrentPosition(pos=>{
+        myLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        fetchList();
+      }, ()=> alert('Location denied'));
+    });
+
+    // initial load
+    fetchList();
+  </script>
+</body>
+</html>

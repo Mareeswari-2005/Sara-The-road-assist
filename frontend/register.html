@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>Register — SARA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <main class="container narrow">
+    <a href="/" class="btn">← Back</a>
+    <h1>Register as a Mechanic</h1>
+    <p class="muted">Add your workshop so nearby users can find you.</p>
+
+    <form id="regForm" class="card form-card">
+      <label>Name<input name="name" required></label>
+      <label>Phone<input name="phone" required></label>
+      <label>City<input name="city"></label>
+      <label>Street<input name="street"></label>
+      <label>Address<textarea name="address"></textarea></label>
+      <label>Services (comma separated)<input name="services" placeholder="flat_tire,battery,towing"></label>
+      <label>Latitude<input name="lat" type="number" step="any"></label>
+      <label>Longitude<input name="lng" type="number" step="any"></label>
+
+      <div class="row" style="display:flex;gap:10px;margin-top:10px;">
+        <button class="btn primary" type="submit">Register</button>
+        <button class="btn" type="button" id="locBtn">Use my location</button>
+      </div>
+      <div id="msg" class="muted small"></div>
+    </form>
+  </main>
+  <script src="/js/main.js"></script>
+  <script>
+    document.getElementById('regForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const body = {};
+      for(const [k,v] of f.entries()) body[k] = v;
+      if(body.services) body.services = body.services.split(',').map(s=>s.trim()).filter(Boolean);
+      try{
+        const res = await fetch('/api/mechanics', { method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        if(res.ok){ document.getElementById('msg').textContent = 'Saved — thank you!'; e.target.reset(); }
+        else { const j = await res.json(); document.getElementById('msg').textContent = 'Error: '+(j.error||res.statusText); }
+      }catch(err){ document.getElementById('msg').textContent = 'Network error'; }
+    });
+    document.getElementById('locBtn').addEventListener('click', ()=>{
+      if(!navigator.geolocation){ alert('Geolocation not supported'); return; }
+      navigator.geolocation.getCurrentPosition(pos=>{
+        document.querySelector('[name=lat]').value = pos.coords.latitude;
+        document.querySelector('[name=lng]').value = pos.coords.longitude;
+      }, ()=> alert('Could not get location'));
+    });
+  </script>
+</body>
+</html>
