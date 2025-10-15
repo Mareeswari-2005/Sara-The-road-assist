@@ -86,7 +86,7 @@
       listEl.innerHTML = '';
       rows.forEach(r=>{
         const el = tpl.content.cloneNode(true);
-        el.querySelector('.title').textContent = r.name + (r.rating ? ' • ★'+(r.rating.toFixed(1)) : '');
+        el.querySelector('.title').textContent = r.name ;
         el.querySelector('.meta').textContent = (r.address ? r.address + ' • ' : '') + (r.city || '');
         const tags = el.querySelector('.tags');
         (r.services||[]).forEach(s => { const sp = document.createElement('span'); sp.className='tag'; sp.textContent = s.replace('_',' '); tags.appendChild(sp); });
