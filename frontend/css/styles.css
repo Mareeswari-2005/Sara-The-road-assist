@@ -634,3 +634,57 @@ textarea {
 a{
   text-decoration: none;
 }
+/* Logo Styles */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: white;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: #06121f;
+  box-shadow: 0 4px 15px rgba(34, 211, 238, 0.3);
+}
+
+.logo-large {
+  width: 80px;
+  height: 80px;
+  font-size: 36px;
+  border-radius: 20px;
+  margin: 0 auto 20px;
+}
+
+.logo-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Updated Hero Section with Logo */
+.hero-with-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--muted);
+  margin-top: 10px;
+  font-weight: 600;
+}
